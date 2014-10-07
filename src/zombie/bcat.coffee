@@ -1,7 +1,7 @@
 # A concise implementation of Ryan Tomayko's most excellent bcat:
 # http://rtomayko.github.com/bcat/
 { exec, spawn } = require("child_process")
-http = require("/home/b.kyle/github/node-http2")
+http = require("../../../node-http2")
 
 
 COMMANDS =

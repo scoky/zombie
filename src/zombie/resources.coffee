@@ -25,6 +25,7 @@ HTTP        = require('../../../node-http2')
 URL         = require("url")
 Zlib        = require("zlib")
 assert      = require("assert")
+Concat	    = require("concat-stream")
 { Promise } = require("bluebird")
 
 # Ignore cert errors
@@ -563,42 +564,48 @@ Resources.makeHTTPRequest = (request, callback)->
 
     request.headers.host = request.headers.host.split(':')[0]
     httpRequest = require('url').parse(request.url)
-    #httpRequest.method =         request.method
-    #httpRequest.url =            request.url
+    httpRequest.method =         request.method
+    httpRequest.url =            request.url
     httpRequest.headers =         HTTP.convertHeadersToH2(request.headers)
-    #httpRequest.body =           request.body
+    httpRequest.body =           request.body
     httpRequest.multipart =      request.multipart
-    #httpRequest.proxy =          @proxy
+    httpRequest.proxy =          null #@proxy
     httpRequest.jar =            false
-    #httpRequest.followRedirect = false
+    httpRequest.followRedirect = false
     httpRequest.encoding =       null
-    #httpRequest.strictSSL =      request.strictSSL
-    #httpRequest.localAddress =   request.localAddress || 0
-    #httpRequest.timeout =        request.timeout || 0
+    httpRequest.strictSSL =      false #request.strictSSL
+    httpRequest.localAddress =   request.localAddress || 0
+    httpRequest.timeout =        request.timeout || 0
     httpRequest.plain =		  false
     prxy = @resources.browser.getProxy()
     if prxy
       httpRequest.host = httpRequest.hostname = prxy.split(':')[0]
       httpRequest.port = prxy.split(':')[1]
 
-    #console.log JSON.stringify httpRequest
+    #console.log JSON.stringify(httpRequest,null,'\t')
     req = HTTP.request httpRequest
-    req.on "response", (response)=>
+    req.on "response", (response)->
       #console.log response.statusCode
+      #console.log JSON.stringify(response.headers,null,'\t')
+      response.pipe(new Concat( (bdy)->	
+        #console.log bdy.toString()
+        resp =
+          url:          request.url
+          statusCode:   response.statusCode
+          headers:      HTTP.convertHeadersFromH2(response.headers)
+          body:         bdy
+          redirects:    request.redirects || 0
+        callback(null, resp)
+      ))
 
-      resp =
-        url:          request.url
-        statusCode:   response.statusCode
-        headers:      response.headers
-        body:         response.body
-        redirects:    request.redirects || 0
-      callback(null, resp)
+    # TODO: Handle push!
 
     req.on "error", (error)=>
       #console.log error
       if error
         callback(error)
       return
+    req.end()
   return
 
 module.exports = Resources

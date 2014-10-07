@@ -68,6 +68,7 @@ class Browser extends EventEmitter
     # Used for assertions
     @assert = new Assert(this)
 
+    @_proxy = null
 
     # -- Console/Logging --
 
@@ -890,6 +891,14 @@ class Browser extends EventEmitter
     return @fire(button, "click", callback)
 
 
+  # Export proxy option for HTTP2
+  setProxy: (proxy) ->
+    @_proxy = proxy
+    return
+
+  getProxy: ->
+    return @_proxy
+
   # -- Cookies --
 
 
@@ -1290,7 +1299,6 @@ Browser.localhost = (hostname, port)->
   Browser.ports.map(hostname, port)
   unless Browser.default.site
     Browser.default.site = hostname.replace(/^\*\./, "")
-
 
 # Represents credentials for a given host.
 class Credentials

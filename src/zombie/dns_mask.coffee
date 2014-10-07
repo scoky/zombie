@@ -126,7 +126,7 @@ class DNSMask
     #   '*.example.test',
     #   '*.test' ]
     parts = domain.split('.')
-    domains = [domain, "*." + domain]
+    domains = ["*", domain, "*." + domain]
     for i in [1...parts.length]
       domains.push("*." + parts[i..parts.length].join('.'))
 

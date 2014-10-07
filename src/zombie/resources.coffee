@@ -21,13 +21,14 @@ File        = require("fs")
 HTML        = require("jsdom").defaultLevel
 Path        = require("path")
 QS          = require("querystring")
-Request     = require("request")
+HTTP        = require('/home/b.kyle/github/node-http2')
 URL         = require("url")
-HTTP        = require('http')
 Zlib        = require("zlib")
 assert      = require("assert")
 { Promise } = require("bluebird")
 
+# Ignore cert errors
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
 
 # Each browser has a resources object that provides the means for retrieving
 # resources and a list of all retrieved resources.
@@ -560,32 +561,44 @@ Resources.makeHTTPRequest = (request, callback)->
     cookies = @cookies
     request.headers.cookie = cookies.serialize(hostname, pathname)
 
-    httpRequest =
-      method:         request.method
-      url:            request.url
-      headers:        request.headers
-      body:           request.body
-      multipart:      request.multipart
-      proxy:          @proxy
-      jar:            false
-      followRedirect: false
-      encoding:       null
-      strictSSL:      request.strictSSL
-      localAddress:   request.localAddress || 0
-      timeout:        request.timeout || 0
+    request.headers.host = request.headers.host.split(':')[0]
+    httpRequest = require('url').parse(request.url)
+    #httpRequest.method =         request.method
+    #httpRequest.url =            request.url
+    httpRequest.headers =         HTTP.convertHeadersToH2(request.headers)
+    #httpRequest.body =           request.body
+    httpRequest.multipart =      request.multipart
+    #httpRequest.proxy =          @proxy
+    httpRequest.jar =            false
+    #httpRequest.followRedirect = false
+    httpRequest.encoding =       null
+    #httpRequest.strictSSL =      request.strictSSL
+    #httpRequest.localAddress =   request.localAddress || 0
+    #httpRequest.timeout =        request.timeout || 0
+    httpRequest.plain =		  false
+    prxy = @resources.browser.getProxy()
+    if prxy
+      httpRequest.host = httpRequest.hostname = prxy.split(':')[0]
+      httpRequest.port = prxy.split(':')[1]
 
-    Request httpRequest, (error, response)=>
-      if error
-        callback(error)
-        return
+    #console.log JSON.stringify httpRequest
+    req = HTTP.request httpRequest
+    req.on "response", (response)=>
+      #console.log response.statusCode
 
-      response =
+      resp =
         url:          request.url
         statusCode:   response.statusCode
         headers:      response.headers
         body:         response.body
         redirects:    request.redirects || 0
-      callback(null, response)
+      callback(null, resp)
+
+    req.on "error", (error)=>
+      #console.log error
+      if error
+        callback(error)
+      return
   return
 
 module.exports = Resources

@@ -462,6 +462,7 @@ Resources.decompressBody = (request, response, next)->
   if response.body && response.headers
     transferEncoding = response.headers["transfer-encoding"]
     contentEncoding = response.headers["content-encoding"]
+    response.headers["transfer-encoding"] = response.headers["content-encoding"] = 'none'
   if ( (contentEncoding == "deflate") || (transferEncoding == "deflate") )
     Zlib.inflate response.body, (error, buffer)->
       unless error
@@ -566,17 +567,17 @@ Resources.makeHTTPRequest = (request, callback)->
     httpRequest = require('url').parse(request.url)
     httpRequest.method =         request.method
     httpRequest.url =            request.url
-    httpRequest.headers =         HTTP.convertHeadersToH2(request.headers)
+    httpRequest.headers =        HTTP.convertHeadersToH2(request.headers)
     httpRequest.body =           request.body
     httpRequest.multipart =      request.multipart
-    httpRequest.proxy =          null #@proxy
+    httpRequest.proxy =          @proxy
     httpRequest.jar =            false
     httpRequest.followRedirect = false
     httpRequest.encoding =       null
-    httpRequest.strictSSL =      false #request.strictSSL
+    httpRequest.strictSSL =      request.strictSSL
     httpRequest.localAddress =   request.localAddress || 0
     httpRequest.timeout =        request.timeout || 0
-    httpRequest.plain =		  false
+    httpRequest.plain =		 false
     prxy = @resources.browser.getProxy()
     if prxy
       httpRequest.host = httpRequest.hostname = prxy.split(':')[0]
@@ -587,7 +588,8 @@ Resources.makeHTTPRequest = (request, callback)->
     req.on "response", (response)->
       #console.log response.statusCode
       #console.log JSON.stringify(response.headers,null,'\t')
-      response.pipe(new Concat( (bdy)->	
+
+      ccat = new Concat( (bdy)->	
         #console.log bdy.toString()
         resp =
           url:          request.url
@@ -596,15 +598,21 @@ Resources.makeHTTPRequest = (request, callback)->
           body:         bdy
           redirects:    request.redirects || 0
         callback(null, resp)
-      ))
+      )
+      response.pipe(ccat)
 
     # TODO: Handle push!
+    req.on "push", (push)=>
+      console.log 'PUSH REQUEST FOR '+push.url
 
     req.on "error", (error)=>
       #console.log error
       if error
         callback(error)
       return
+
+    if request.body
+      req.write(request.body)
     req.end()
   return
 

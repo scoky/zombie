@@ -46,7 +46,7 @@ BROWSER_OPTIONS   = ["features", "headers", "htmlParser", "waitDuration",
 # Supported browser features.
 BROWSER_FEATURES  = ["scripts", "css", "img", "iframe"]
 # These features are set on/off by default.
-DEFAULT_FEATURES  = "scripts no-css no-img iframe"
+DEFAULT_FEATURES  = "scripts css img iframe"
 
 MOUSE_EVENT_NAMES = ["mousedown", "mousemove", "mouseup"]
 

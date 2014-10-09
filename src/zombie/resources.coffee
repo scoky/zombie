@@ -584,6 +584,7 @@ Resources.makeHTTPRequest = (request, callback)->
       httpRequest.port = prxy.split(':')[1]
 
     #console.log JSON.stringify(httpRequest,null,'\t')
+    #console.log request.url
     req = HTTP.request httpRequest
     req.on "response", (response)->
       #console.log response.statusCode
@@ -604,6 +605,9 @@ Resources.makeHTTPRequest = (request, callback)->
     # TODO: Handle push!
     req.on "push", (push)=>
       console.log 'PUSH REQUEST FOR '+push.url
+
+    req.on "newConnection", ()=>
+      console.log 'NEW TCP CONNECTION'
 
     req.on "error", (error)=>
       #console.log error

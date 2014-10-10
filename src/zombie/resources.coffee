@@ -578,6 +578,8 @@ Resources.makeHTTPRequest = (request, callback)->
     httpRequest.localAddress =   request.localAddress || 0
     httpRequest.timeout =        request.timeout || 0
     httpRequest.plain =		 false
+    httpRequest.servername =     hostname
+
     prxy = @resources.browser.getProxy()
     if prxy
       httpRequest.host = httpRequest.hostname = prxy.split(':')[0]

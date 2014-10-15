@@ -38,6 +38,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
 class Resources extends Array
   constructor: (browser)->
     @browser = browser
+    @callbacks = {}
     @pipeline = Resources.pipeline.slice()
     @urlMatchers = []
 
@@ -586,24 +587,35 @@ Resources.makeHTTPRequest = (request, callback)->
       httpRequest.host = httpRequest.hostname = prxy.split(':')[0]
       httpRequest.port = prxy.split(':')[1]
 
+    # Handle multiple callbacks for same request
+    if @resources.callbacks[request.url] == undefined
+      @resources.callbacks[request.url] = []
+    @resources.callbacks[request.url].push(callback)
+    if @resources.callbacks[request.url].length != 1
+      return
+
     #console.log JSON.stringify(httpRequest,null,'\t')
     #console.log request.url
     req = HTTP.request httpRequest
-    req.on "response", (response)->
+    req.on("response", (response)=>
       #console.log response.statusCode
       #console.log JSON.stringify(response.headers,null,'\t')
+      
+      ccat = new Concat((bdy)=>
+        @resources.callbacks[request.url].forEach( (cbak)=>
+          #console.log bdy.toString()
+          resp =
+            url:          request.url
+            statusCode:   response.statusCode
+            headers:      HTTP.convertHeadersFromH2(response.headers)
+            body:         bdy
+            redirects:    request.redirects || 0
 
-      ccat = new Concat( (bdy)->	
-        #console.log bdy.toString()
-        resp =
-          url:          request.url
-          statusCode:   response.statusCode
-          headers:      HTTP.convertHeadersFromH2(response.headers)
-          body:         bdy
-          redirects:    request.redirects || 0
-        callback(null, resp)
+          cbak(null, resp)
+        )
       )
       response.pipe(ccat)
+    )
 
     # TODO: Handle push!
     req.on "push", (push)=>
@@ -615,7 +627,9 @@ Resources.makeHTTPRequest = (request, callback)->
     req.on "error", (error)=>
       #console.log error
       if error
-        callback(error)
+        @resources.callbacks[request.url].forEach( (cbak)=>
+          cbak(error)
+        )
       return
 
     if request.body

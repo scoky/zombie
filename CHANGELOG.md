@@ -1,3 +1,49 @@
+## Version 2.0.8 2014-10-14
+
+FIXED bump to JSDOM 1.0.3 to fix cssstyle-browserify dependency
+
+FIXED console.debug fails when brower.silent = false
+
+    671 passing
+    10 sec to complete
+
+
+## Version 2.0.7 2014-10-13
+
+FIXED csstyle bug: Cannot find module './properties'
+
+    671 passing
+    11 sec to complete
+
+
+## Version 2.0.6 2014-10-11
+
+CHANGED Output from console.log() and friends goes to console unless
+`browser.silent = true`.  You can also set it globally with
+`Browser.default.silent = true`.  Console output always visible when debugging
+(`DEBUG=zombie`).
+
+ADDED documentation for debugging using `DEBUG=zombie` and `browser.silent`.
+
+    671 passing
+    11 sec to complete
+
+
+## Version 2.0.5 2014-10-10
+
+**NOTE** This version introduces a bug from JSDOM, whereby resetting a form will
+not reset `<select>` elements correctly
+
+UPDATED to latest JSDOM
+
+FIXED Exceptions are being swallowed #761
+
+Minor other bug fixes
+
+    671 passing
+    11 sec to complete
+
+
 ## Version 2.0.4 2014-09-26
 
 FIXED browser will sometimes run code asynchronously outside a wait

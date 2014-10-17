@@ -77,11 +77,13 @@ class Browser extends EventEmitter
 
     # Message written to window.console.  Level is log, info, error, etc.
     #
-    # All output goes to stdout when debugging enabled (DEBUG=zombie), unless
-    # brower.silent is true.
+    # All output goes to stdout, except when browser.silent = true and output
+    # only shown when debugging (DEBUG=zombie).
     @on "console", (level, message)->
-      unless browser.silent
-        debug("console.#{level}: #{message}")
+      if browser.silent
+        debug(">> #{message}")
+      else
+        console.log(message)
 
     # Message written to browser.log.
     @on "log", (args...)->
@@ -98,10 +100,10 @@ class Browser extends EventEmitter
     @on "request", (request)->
 
     @on "response", (request, response)->
-      browser.log "#{request.method} #{request.url} => #{response.statusCode}"
+      browser.log "#{request.method || "GET"} #{response.url} => #{response.statusCode}"
 
-    @on "redirect", (request, response)->
-      browser.log "#{request.method} #{request.url} => #{response.statusCode} #{response.url}"
+    @on "redirect", (request, response, redirectRequest)->
+      browser.log "#{request.method || "GET"} #{request.url} => #{response.statusCode} #{response.url}"
 
     # Document loaded.
     @on "loaded", (document)->
@@ -311,6 +313,7 @@ class Browser extends EventEmitter
 
     if callback
       promise.done(callback, callback)
+      return
     else
       return promise
 
@@ -517,6 +520,7 @@ class Browser extends EventEmitter
     promise = @wait(options).finally(resetOptions)
     if callback
       promise.done(callback, callback)
+      return
     else
       return promise
 
@@ -542,6 +546,7 @@ class Browser extends EventEmitter
     promise = if error then Promise.reject(error) else @wait()
     if callback
       promise.done(callback, callback)
+      return
     else
       return promise
 
@@ -1213,7 +1218,7 @@ Browser.default =
   #   Browser.default.proxy = "http://myproxy:8080"
   proxy: null
 
-  # If true, supress `console.log` output from scripts.
+  # If true, supress `console.log` output from scripts (ignored when DEBUG=zombie)
   silent: false
 
   # You can use visit with a path, and it will make a request relative to this host/URL.

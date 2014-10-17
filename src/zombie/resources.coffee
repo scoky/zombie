@@ -449,7 +449,7 @@ Resources.handleHTTPResponse = (request, response, callback)->
       strictSSL:  request.strictSSL
       time:       request.time
       timeout:    request.timeout
-    @emit("redirect", response, redirectRequest)
+    @emit("redirect", request, response, redirectRequest)
     @resources.runPipeline(redirectRequest, callback)
 
   else
@@ -549,7 +549,7 @@ Resources.makeHTTPRequest = (request, callback)->
           File.readFile filename, (error, buffer)=>
             # Fallback with error -> callback
             if error
-              resource.error = error
+              request.error = error
               callback(error)
             else
               callback(null, body: buffer)

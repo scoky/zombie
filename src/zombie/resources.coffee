@@ -595,10 +595,10 @@ Resources.makeHTTPRequest = (request, callback)->
       return
 
     #console.log JSON.stringify(httpRequest,null,'\t')
-    #console.log request.url
+    console.log 'REQUEST='+request.url
     req = HTTP.request httpRequest
     req.on("response", (response)=>
-      #console.log response.statusCode
+      console.log 'RESPONSE='+response.statusCode
       #console.log JSON.stringify(response.headers,null,'\t')
       
       ccat = new Concat((bdy)=>

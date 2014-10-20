@@ -590,32 +590,42 @@ Resources.makeHTTPRequest = (request, callback)->
     # Handle multiple callbacks for same request
     if @resources.callbacks[request.url] == undefined
       @resources.callbacks[request.url] = []
-    @resources.callbacks[request.url].push(callback)
-    if @resources.callbacks[request.url].length != 1
+
+    if Array.isArray(@resources.callbacks[request.url])
+      @resources.callbacks[request.url].push(callback)
+      if @resources.callbacks[request.url].length != 1
+        return
+    else
+      makeTheCall(callback, @resources.callbacks[request.url])
       return
 
     #console.log JSON.stringify(httpRequest,null,'\t')
-    console.log 'REQUEST='+request.url
+    console.log (new Date()).toISOString()+' REQUEST='+request.url
     req = HTTP.request httpRequest
     req.on("response", (response)=>
-      console.log 'RESPONSE='+response.statusCode
+      console.log (new Date()).toISOString()+' RESPONSE='+response.statusCode+' '+request.url
       #console.log JSON.stringify(response.headers,null,'\t')
       
       ccat = new Concat((bdy)=>
+        response.body = bdy
         @resources.callbacks[request.url].forEach( (cbak)=>
-          #console.log bdy.toString()
-          resp =
-            url:          request.url
-            statusCode:   response.statusCode
-            headers:      HTTP.convertHeadersFromH2(response.headers)
-            body:         bdy
-            redirects:    request.redirects || 0
-
-          cbak(null, resp)
+          makeTheCall(cbak, response)
         )
+        @resources.callbacks[request.url] = response
       )
       response.pipe(ccat)
     )
+
+    makeTheCall = (cbak, response)->
+      #console.log response.body.toString()
+      resp =
+        url:          request.url
+        statusCode:   response.statusCode
+        headers:      HTTP.convertHeadersFromH2(response.headers)
+        body:         response.body
+        redirects:    request.redirects || 0
+
+      cbak(null, resp)
 
     # TODO: Handle push!
     req.on "push", (push)=>

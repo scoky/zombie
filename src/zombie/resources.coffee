@@ -588,30 +588,35 @@ Resources.makeHTTPRequest = (request, callback)->
       httpRequest.port = prxy.split(':')[1]
 
     # Handle multiple callbacks for same request
-    if @resources.callbacks[request.url] == undefined
-      @resources.callbacks[request.url] = []
+    if ! @resources.callbacks[request.url]
+      @resources.callbacks[request.url] = 
+        callbacks:	[]
+        request:	request
+        response:	undefined
+    callStruct = @resources.callbacks[request.url]
 
-    if Array.isArray(@resources.callbacks[request.url])
-      @resources.callbacks[request.url].push(callback)
-      if @resources.callbacks[request.url].length != 1
-        return
-    else
-      makeTheCall(callback, @resources.callbacks[request.url])
+    if callStruct.response
+      makeTheCall(callback, callStruct.response)
       return
 
-    #console.log JSON.stringify(httpRequest,null,'\t')
-    console.log (new Date()).toISOString()+' REQUEST='+request.url
+    callStruct.callbacks.push(callback)
+    if callStruct.callbacks.length != 1
+      return
+
+    console.log 'REQUEST '+Date.now()+' '+request.url
     req = HTTP.request httpRequest
     req.on("response", (response)=>
-      console.log (new Date()).toISOString()+' RESPONSE='+response.statusCode+' '+request.url
       #console.log JSON.stringify(response.headers,null,'\t')
       
       ccat = new Concat((bdy)=>
+        console.log 'RESPONSE '+Date.now()+' '+request.url+' '+bdy.length
+
         response.body = bdy
-        @resources.callbacks[request.url].forEach( (cbak)=>
+        callStruct.response = response
+
+        callStruct.callbacks.forEach( (cbak)=>
           makeTheCall(cbak, response)
         )
-        @resources.callbacks[request.url] = response
       )
       response.pipe(ccat)
     )

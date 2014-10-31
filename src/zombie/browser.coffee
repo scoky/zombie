@@ -1239,7 +1239,7 @@ Browser.default =
   language: "en-US"
 
   # Default time to wait (visit, wait, etc).
-  waitDuration: "5s"
+  waitDuration: "20s"
 
   # Indicates whether or not to validate and execute JavaScript, default true.
   runScripts: true

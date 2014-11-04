@@ -603,13 +603,13 @@ Resources.makeHTTPRequest = (request, callback)->
     if callStruct.callbacks.length != 1
       return
 
-    console.log 'REQUEST '+Date.now()+' '+request.url
+    #console.log 'REQUEST '+Date.now()+' '+request.url
     req = HTTP.request httpRequest
     req.on("response", (response)=>
       #console.log JSON.stringify(response.headers,null,'\t')
       
       ccat = new Concat((bdy)=>
-        console.log 'RESPONSE '+Date.now()+' '+request.url+' '+bdy.length
+        #console.log 'RESPONSE '+Date.now()+' '+request.url+' '+bdy.length
 
         response.body = bdy
         callStruct.response = response
@@ -634,10 +634,13 @@ Resources.makeHTTPRequest = (request, callback)->
 
     # TODO: Handle push!
     req.on "push", (push)=>
-      console.log 'PUSH REQUEST FOR '+push.url
+      @resources.browser.emit("push", push)
 
-    req.on "newConnection", ()=>
-      console.log 'NEW TCP CONNECTION'
+    req.on "newConnection", (endpoint)=>
+      @resources.browser.emit("newConnection", endpoint)
+
+    req.on "protocolNegotiated", (protocol)=>
+      @resources.browser.emit("protocolNegotiated", protocol)
 
     req.on "error", (error)=>
       #console.log error

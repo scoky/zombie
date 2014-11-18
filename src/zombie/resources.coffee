@@ -580,7 +580,7 @@ Resources.makeHTTPRequest = (request, callback)->
     httpRequest.timeout =        request.timeout || 0
     httpRequest.plain =		 false
     httpRequest.servername =     hostname
-    httpRequest.protocol =	 'https:'
+    #httpRequest.protocol =	 'https:'
 
     prxy = @resources.browser.getProxy()
     if prxy

@@ -474,7 +474,7 @@ Asserts the named attribute of the selected element(s) has the expected value.
 Fails if no element found.
 
 ```js
-browser.assert.attribute('form', 'method', 'post);
+browser.assert.attribute('form', 'method', 'post');
 browser.assert.attribute('form', 'action', '/customer/new');
 // Disabled with no attribute value, i.e. <button disabled>
 browser.assert.attribute('button', 'disabled', '');
@@ -601,8 +601,9 @@ browser.assert.input('form input[name=text]', 'Head Eater');
 #### assert.link(selection, text, url, message)
 
 Asserts that at least one link exists with the given selector, text and URL.
-The selector can be `a`, but a more specific selector is recommended.  URL can
-be relative to the current document.
+The selector can be `a`, but a more specific selector is recommended.
+
+URL can be relative to the current document, or a regular expression.
 
 Fails if no element is selected that also has the specified text content and
 URL.
@@ -666,12 +667,13 @@ The expected URL can be one of:
 - The full URL as a string
 - A regular expression
 - A function, called with the URL and returns true if the assertion is true
-- An object, in which case individual properties are matched against the URL
+- An [object](http://nodejs.org/api/url.html#url_url_parse_urlstr_parsequerystring_slashesdenotehost), in which case individual properties are matched against the URL
 
 For example:
 
 ```js
 browser.assert.url('http://localhost/foo/bar');
+browser.assert.url(new RegExp('^http://localhost/foo/\\w+$'));
 browser.assert.url({ pathame: '/foo/bar' });
 browser.assert.url({ query: { name: 'joedoe' } });
 ```
@@ -912,7 +914,7 @@ browser.resources.mock('http://3rd.party.api/v1/request', {
 })
 ```
 
-In the real world, servers and networks often fail.  You can test to for these
+In the real world, servers and networks often fail.  You can test for these
 conditions by asking Zombie to simulate a failure.  For example:
 
 ```js
@@ -989,7 +991,7 @@ When handlers are executed, `this` is set to the browser instance.
 
 ### Operating On Resources
 
-If you need to retrieve of operate on resources directly, you can do that as
+If you need to retrieve or operate on resources directly, you can do that as
 well, using all the same features available to Zombie, including mocks, cookies,
 authentication, etc.
 

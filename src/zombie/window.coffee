@@ -11,6 +11,7 @@ WebSocket       = require("ws")
 URL             = require("url")
 XMLHttpRequest  = require("./xhr")
 createWindow    = require("#{JSDOM_PATH}/../jsdom/browser/index").createWindow
+XPath           = require("#{JSDOM_PATH}/../jsdom/level3/xpath")
 
 
 Events      = JSDOM.level(3, 'events')
@@ -145,6 +146,14 @@ module.exports = ({ browser, params, encoding, history, method, name, opener, pa
     img.height = height
     return img
 
+  # DataView: get from globals
+  window.DataView = DataView
+
+  window.XPathException   = XPath.XPathException
+  window.XPathExpression  = XPath.XPathExpression
+  window.XPathEvaluator   = XPath.XPathEvaluator
+  window.XPathResult      = XPath.XPathResult
+
   window.resizeTo = (width, height)->
     window.outerWidth = window.innerWidth = width
     window.outerHeight = window.innerHeight = height
@@ -181,10 +190,6 @@ module.exports = ({ browser, params, encoding, history, method, name, opener, pa
 
   # Evaulate in context of window. This can be called with a script (String) or a function.
   window._evaluate = (code, filename)->
-    # Surpress JavaScript validation and execution
-    if !browser.runScripts
-      return
-
     try
       # The current window, postMessage and window.close need this
       [originalInScope, browser._windowInScope] = [browser._windowInScope, window]
@@ -196,14 +201,9 @@ module.exports = ({ browser, params, encoding, history, method, name, opener, pa
       return result
     catch error
       error.filename ||= filename
-      browser.emit("error", error)
+      throw error
     finally
       browser._windowInScope = originalInScope
-
-  # Default onerror handler.
-  window.onerror = (event)->
-    error = event.error || new Error("Error loading script")
-    browser.emit("error", error)
 
 
   # -- Event loop --
@@ -286,11 +286,9 @@ module.exports = ({ browser, params, encoding, history, method, name, opener, pa
       browser.eventLoop.next ->
         history.go(amount)
     pushState: (args...)->
-      browser.eventLoop.next ->
-        history.pushState(args...)
+      history.pushState(args...)
     replaceState: (args...)->
-      browser.eventLoop.next ->
-        history.replaceState(args...)
+      history.replaceState(args...)
     _submit:      history.submit.bind(history)
     dump:         history.dump.bind(history)
   Object.defineProperties windowHistory,
@@ -374,10 +372,16 @@ loadDocument = ({ document, history, url, method, encoding, params })->
 
       window._eventQueue.http method, url, headers: headers, params: params, target: document, (error, response)->
         if error
+          # 4xx/5xx we get an error with an HTTP response
+          if response
+            window._response = response
+            history.updateLocation(window, response.url)
+
+          # Error in body of page helps with debugging
+          message = (response && response.body) || error.message || error
           document.open()
-          document.write("<html><body>#{error.message || error}</body></html>")
+          document.write("<html><body>#{message}</body></html>")
           document.close()
-          browser.emit("error", error)
           return
 
         window._response = response
@@ -435,11 +439,7 @@ loadDocument = ({ document, history, url, method, encoding, params })->
         document.write(body)
         document.close()
 
-        # Error on any response that's not 2xx, or if we're not smart enough to
-        # process the content and generate an HTML DOM tree from it.
-        if response.statusCode >= 400
-          browser.emit("error", new Error("Server returned status code #{response.statusCode} from #{url}"))
-        else if document.documentElement
+        if document.documentElement
           browser.emit("loaded", document)
         else
           browser.emit("error", new Error("Could not parse document at #{url}"))

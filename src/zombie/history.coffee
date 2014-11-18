@@ -321,13 +321,19 @@ createLocation = (history, url)->
   Object.defineProperties location,
     assign:
       value: (url)->
-        browser.eventLoop.next ->
+        if hashChange(history.current, url)
           history.assign(url)
+        else
+          browser.eventLoop.next ->
+            history.assign(url)
 
     replace:
       value: (url)->
-        browser.eventLoop.next ->
+        if hashChange(history.current, url)
           history.replace(url)
+        else
+          browser.eventLoop.next ->
+            history.replace(url)
 
     reload:
       value: (force)->
@@ -357,6 +363,10 @@ createLocation = (history, url)->
       set: (href)->
         location.assign(URL.format(href))
       enumerable: true
+
+    origin:
+      get: ->
+        return "#{@protocol}//#{@host}"
 
   # Setting any of the properties creates a new URL and navigates there
   for prop in ["hash", "host", "pathname", "port", "protocol", "search"]

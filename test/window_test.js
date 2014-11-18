@@ -172,6 +172,9 @@ describe('Window', function() {
     it('.language should be set to en-US', function() {
       browser.assert.evaluate('navigator.language', 'en-US');
     });
+    it('.plugins should be empty array', function() {
+      browser.assert.evaluate('navigator.plugins', []);
+    });
   });
 
   describe('atob', function() {
@@ -188,6 +191,13 @@ describe('Window', function() {
     });
   });
 
+  describe('DataView', function () {
+    it('should create a DataView', function () {
+      const window = browser.open();
+      assert.equal(window.DataView, DataView);
+      browser.assert.evaluate('new DataView(new ArrayBuffer(8)).byteLength', '8');
+    });
+  });
 
   describe('onload', function() {
     before(async function() {

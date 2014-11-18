@@ -1,3 +1,51 @@
+## Version 2.2.1 2014-11-14
+
+FIXED request 2.48.0 leaks globals, reverting to 2.47.0
+
+    686 passing
+    11 sec to complete
+
+
+## Version 2.2.0 2014-11-14
+
+ADDED window.location.origin #796
+
+FIXED updated to JSDOM 1.2.1
+
+FIXED browser.evaluate({throws error}) should throw an error #790
+
+FIXED changing location.hash should be synchronous #781
+
+FIXED DNS.lookup(null) should resolve to null IP #783
+
+FIXED Browser should show errors for resources that fail to load #794
+
+REMOVED no longer support cookie folding with comma #792
+
+    687 passing
+    11 sec to complete
+
+
+## Version 2.1.1 2014-10-23
+
+FIXED pushState/replaceState should change history immediately #781
+
+    682 passing
+    10 sec to complete
+
+
+## Version 2.1.0 2014-10-22
+
+ADDED browser.assert.link can use regular expression to match link URL #770
+
+ADDED window now has access to XPathResult and friends #762
+
+FIXED images seem to load twice #780
+
+    680 passing
+    10 sec to complete
+
+
 ## Version 2.0.8 2014-10-14
 
 FIXED bump to JSDOM 1.0.3 to fix cssstyle-browserify dependency

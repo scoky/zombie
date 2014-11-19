@@ -648,6 +648,10 @@ Resources.makeHTTPRequest = (request, callback)->
 #                     version:  3
 #                  }
            })
+
+        # Report the new connection
+        @resources.browser.emit("newConnection", {})
+
       httpRequest.agent = cagent
       if httpRequest.plain
         req = HTTP.request httpRequest

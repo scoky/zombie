@@ -703,7 +703,7 @@ Resources.makeHTTPRequest = (request, callback)->
     req.on "error", (error)=>
       #console.log error
       if error
-        @resources.callbacks[request.url].forEach( (cbak)=>
+        callStruct.callbacks.forEach( (cbak)=>
           cbak(error)
         )
       return

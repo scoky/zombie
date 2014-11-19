@@ -21,7 +21,10 @@ File        = require("fs")
 HTML        = require("jsdom").defaultLevel
 Path        = require("path")
 QS          = require("querystring")
-HTTP        = require('../../../node-http2')
+HTTP        = require('http')
+HTTPS        = require('https')
+HTTP2       = require('../../../node-http2')
+SPDY        = require('spdy')
 URL         = require("url")
 Zlib        = require("zlib")
 assert      = require("assert")
@@ -41,6 +44,7 @@ class Resources extends Array
     @callbacks = {}
     @pipeline = Resources.pipeline.slice()
     @urlMatchers = []
+    @spdy_agents = []
 
 
   # Make an HTTP request (also supports file: protocol).
@@ -568,19 +572,30 @@ Resources.makeHTTPRequest = (request, callback)->
     httpRequest = require('url').parse(request.url)
     httpRequest.method =         request.method
     httpRequest.url =            request.url
-    httpRequest.headers =        HTTP.convertHeadersToH2(request.headers)
+    httpRequest.headers =        request.headers
     httpRequest.body =           request.body
     httpRequest.multipart =      request.multipart
-    httpRequest.proxy =          @proxy
-    httpRequest.jar =            false
-    httpRequest.followRedirect = false
-    httpRequest.encoding =       null
-    httpRequest.strictSSL =      request.strictSSL
-    httpRequest.localAddress =   request.localAddress || 0
-    httpRequest.timeout =        request.timeout || 0
-    httpRequest.plain =		 false
+    #httpRequest.proxy =          @proxy
+    #httpRequest.jar =            false
+    #httpRequest.followRedirect = false
+    #httpRequest.encoding =       null
+    #httpRequest.strictSSL =      request.strictSSL
+    #httpRequest.localAddress =   request.localAddress || 0
+    #httpRequest.timeout =        request.timeout || 0    
     httpRequest.servername =     hostname
+    httpRequest.plain =          httpRequest.protocol == 'http:'
+    if httpRequest.plain
+      port = 80
+    else
+      port = 443
+    httpRequest.port =           httpRequest.port || port
     #httpRequest.protocol =	 'https:'
+    #console.log JSON.stringify(httpRequest, null, '\t')
+
+    protocol = @resources.browser.getProtocol()
+    # Convert headers for the special case of h2
+    if protocol == 'h2'
+        httpRequest.headers = HTTP2.convertHeadersToH2(request.headers)
 
     prxy = @resources.browser.getProxy()
     if prxy
@@ -588,6 +603,7 @@ Resources.makeHTTPRequest = (request, callback)->
       httpRequest.port = prxy.split(':')[1]
 
     # Handle multiple callbacks for same request
+    # First request, set up state
     if ! @resources.callbacks[request.url]
       @resources.callbacks[request.url] = 
         callbacks:	[]
@@ -595,6 +611,7 @@ Resources.makeHTTPRequest = (request, callback)->
         response:	undefined
     callStruct = @resources.callbacks[request.url]
 
+    # Response already receive, callback immediately
     if callStruct.response
       makeTheCall(callback, callStruct.response)
       return
@@ -604,9 +621,43 @@ Resources.makeHTTPRequest = (request, callback)->
       return
 
     #console.log 'REQUEST '+Date.now()+' '+request.url
-    req = HTTP.request httpRequest
+    if protocol == 'h2'
+      if httpRequest.plain
+        req = HTTP2.raw.request httpRequest
+      else
+        req = HTTP2.request httpRequest
+    else if protocol == 'h1'
+      if httpRequest.plain
+        req = HTTP.request httpRequest
+      else
+        req = HTTPS.request httpRequest
+    else if protocol == 'spdy'
+      cagent = null
+      for agent in @resources.spdy_agents
+         if (@resources.spdy_agents[i].host == httpRequest.host && @resources.spdy_agents[i].post == httpRequest.port)
+            cagent = agent
+            break
+
+      if ! cagent
+        cagent = SPDY.createAgent({
+           host:  httpRequest.host
+           port:  httpRequest.port
+#           spdy:  {
+#                     plain:    false
+#                     ssl:      true
+#                     version:  3
+#                  }
+           })
+      httpRequest.agent = cagent
+      if httpRequest.plain
+        req = HTTP.request httpRequest
+      else
+        req = HTTPS.request httpRequest
+    else
+      throw new Error
+
     req.on("response", (response)=>
-      #console.log JSON.stringify(response.headers,null,'\t')
+      #console.log 'BEGIN RESPONSE'
       
       ccat = new Concat((bdy)=>
         #console.log 'RESPONSE '+Date.now()+' '+request.url+' '+bdy.length
@@ -626,11 +677,14 @@ Resources.makeHTTPRequest = (request, callback)->
       resp =
         url:          request.url
         statusCode:   response.statusCode
-        headers:      HTTP.convertHeadersFromH2(response.headers)
+        headers:      response.headers
         body:         response.body
         redirects:    request.redirects || 0
 
-      cbak(null, resp)
+      if protocol == 'h2'
+        resp.headers = HTTP2.convertHeadersFromH2(response.headers)
+
+      setImmediate(cbak, null, resp)
 
     # TODO: Handle push!
     req.on "push", (push)=>

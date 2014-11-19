@@ -69,6 +69,7 @@ class Browser extends EventEmitter
     @assert = new Assert(this)
 
     @_proxy = null
+    @_protocol = null
 
     # -- Console/Logging --
 
@@ -903,6 +904,13 @@ class Browser extends EventEmitter
 
   getProxy: ->
     return @_proxy
+
+  setProtocol: (protocol) ->
+    @_protocol = protocol
+    return
+
+  getProtocol: ->
+    return @_protocol
 
   # -- Cookies --
 

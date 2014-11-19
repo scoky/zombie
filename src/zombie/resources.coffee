@@ -626,7 +626,7 @@ Resources.makeHTTPRequest = (request, callback)->
         req = HTTP2.raw.request httpRequest
       else
         req = HTTP2.request httpRequest
-    else if protocol == 'h1'
+    else if protocol == 'http/1.1'
       if httpRequest.plain
         req = HTTP.request httpRequest
       else

@@ -634,7 +634,7 @@ Resources.makeHTTPRequest = (request, callback)->
     else if protocol == 'spdy'
       cagent = null
       for agent in @resources.spdy_agents
-         if (@resources.spdy_agents[i].host == httpRequest.host && @resources.spdy_agents[i].post == httpRequest.port)
+         if (@resources.spdy_agents[i].host == httpRequest.host && @resources.spdy_agents[i].port == httpRequest.port)
             cagent = agent
             break
 

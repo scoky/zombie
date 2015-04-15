@@ -651,7 +651,7 @@ Resources.makeHTTPRequest = (request, callback)->
            })
 
         # Report the new connection
-        @resources.browser.emit("newConnection", {})
+        @resources.browser.emit("newConnection", {}, httpRequest.host, httpRequest.port)
         @resources.spdy_agents.push(cagent)
 
       httpRequest.agent = cagent
@@ -697,10 +697,10 @@ Resources.makeHTTPRequest = (request, callback)->
       @resources.browser.emit("push", push)
 
     req.on "newConnection", (endpoint)=>
-      @resources.browser.emit("newConnection", endpoint)
+      @resources.browser.emit("newConnection", endpoint, httpRequest.host, httpRequest.port)
 
     req.on "protocolNegotiated", (protocol)=>
-      @resources.browser.emit("protocolNegotiated", protocol)
+      @resources.browser.emit("protocolNegotiated", protocol, httpRequest.host, httpRequest.port)
 
     req.on "error", (error)=>
       #console.log error

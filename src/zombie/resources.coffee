@@ -634,7 +634,8 @@ Resources.makeHTTPRequest = (request, callback)->
     else if protocol == 'spdy'
       cagent = null
       for agent in @resources.spdy_agents
-         if (@resources.spdy_agents[i].host == httpRequest.host && @resources.spdy_agents[i].port == httpRequest.port)
+#         console.log agent
+         if (agent.options.host == httpRequest.host && agent.options.port == httpRequest.port)
             cagent = agent
             break
 
@@ -651,6 +652,7 @@ Resources.makeHTTPRequest = (request, callback)->
 
         # Report the new connection
         @resources.browser.emit("newConnection", {})
+        @resources.spdy_agents.push(cagent)
 
       httpRequest.agent = cagent
       if httpRequest.plain

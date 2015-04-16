@@ -71,7 +71,7 @@
     "requirejs": "^2.1.15",
     "traceur": "^0.0.74",
     "concat-stream": "*",
-    "spdy": "*"
+    "spdy": "1.29.1"
   },
   "repository": {
     "type": "git",

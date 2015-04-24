@@ -45,6 +45,7 @@ class Resources extends Array
     @pipeline = Resources.pipeline.slice()
     @urlMatchers = []
     @spdy_agents = []
+    @h1_agent = undefined
 
 
   # Make an HTTP request (also supports file: protocol).
@@ -264,7 +265,6 @@ class Resources extends Array
     # Start with first request handler
     nextRequestHandler()
     return
-
 
 # -- Handlers
 
@@ -627,10 +627,18 @@ Resources.makeHTTPRequest = (request, callback)->
       else
         req = HTTP2.request httpRequest
     else if protocol == 'http/1.1'
+      lib = HTTPS
       if httpRequest.plain
-        req = HTTP.request httpRequest
-      else
-        req = HTTPS.request httpRequest
+        lib = HTTP
+
+      if @resources.browser.tcpLimit > 0
+        if ! @resources.h1_agent
+          @resources.h1_agent = new lib.Agent({ 
+              maxSockets: @resources.browser.tcpLimit
+            })
+        httpRequest.agent = @resources.h1_agent
+
+      req = HTTPS.request httpRequest
     else if protocol == 'spdy'
       cagent = null
       for agent in @resources.spdy_agents

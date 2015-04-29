@@ -638,7 +638,7 @@ Resources.makeHTTPRequest = (request, callback)->
             })
         httpRequest.agent = @resources.h1_agent
 
-      req = HTTPS.request httpRequest
+      req = lib.request httpRequest
     else if protocol == 'spdy'
       cagent = null
       for agent in @resources.spdy_agents

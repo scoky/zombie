@@ -46,6 +46,7 @@ class Resources extends Array
     @urlMatchers = []
     @spdy_agents = []
     @h1_agent = undefined
+    @h1s_agent = undefined
 
 
   # Make an HTTP request (also supports file: protocol).
@@ -626,19 +627,24 @@ Resources.makeHTTPRequest = (request, callback)->
         req = HTTP2.raw.request httpRequest
       else
         req = HTTP2.request httpRequest
-    else if protocol == 'http/1.1'
-      lib = HTTPS
-      if httpRequest.plain
-        lib = HTTP
-
+    else if protocol == 'http/1.1' && httpRequest.plain
       if @resources.browser.tcpLimit > 0
         if ! @resources.h1_agent
-          @resources.h1_agent = new lib.Agent({ 
+          @resources.h1_agent = new HTTP.Agent({ 
               maxSockets: @resources.browser.tcpLimit
             })
         httpRequest.agent = @resources.h1_agent
 
-      req = lib.request httpRequest
+      req = HTTP.request httpRequest
+    else if protocol == 'http/1.1' && ! httpRequest.plain
+      if @resources.browser.tcpLimit > 0
+        if ! @resources.h1s_agent
+          @resources.h1s_agent = new HTTPS.Agent({ 
+              maxSockets: @resources.browser.tcpLimit
+            })
+        httpRequest.agent = @resources.h1s_agent
+
+      req = HTTPS.request httpRequest
     else if protocol == 'spdy'
       cagent = null
       for agent in @resources.spdy_agents

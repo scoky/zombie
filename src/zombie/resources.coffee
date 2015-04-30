@@ -45,6 +45,8 @@ class Resources extends Array
     @pipeline = Resources.pipeline.slice()
     @urlMatchers = []
     @spdy_agents = []
+    @h1_avail_connections = {}
+    @h1_total_connections = {}
     @h1_agent = undefined
     @h1s_agent = undefined
 
@@ -627,24 +629,36 @@ Resources.makeHTTPRequest = (request, callback)->
         req = HTTP2.raw.request httpRequest
       else
         req = HTTP2.request httpRequest
-    else if protocol == 'http/1.1' && httpRequest.plain
-      if @resources.browser.tcpLimit > 0
-        if ! @resources.h1_agent
-          @resources.h1_agent = new HTTP.Agent({ 
-              maxSockets: @resources.browser.tcpLimit
-            })
-        httpRequest.agent = @resources.h1_agent
+    else if protocol == 'http/1.1'
 
-      req = HTTP.request httpRequest
-    else if protocol == 'http/1.1' && ! httpRequest.plain
-      if @resources.browser.tcpLimit > 0
-        if ! @resources.h1s_agent
-          @resources.h1s_agent = new HTTPS.Agent({ 
-              maxSockets: @resources.browser.tcpLimit
-            })
-        httpRequest.agent = @resources.h1s_agent
+      if ! @resources.h1_total_connections[httpRequest.host+httpRequest.port]
+        @resources.h1_avail_connections[httpRequest.host+httpRequest.port] = 0
+        @resources.h1_total_connections[httpRequest.host+httpRequest.port] = 1
+        @resources.browser.emit("newConnection", {}, httpRequest.host, httpRequest.port)
+      else if @resources.h1_avail_connections[httpRequest.host+httpRequest.port] > 0
+        @resources.h1_avail_connections[httpRequest.host+httpRequest.port] = @resources.h1_avail_connections[httpRequest.host+httpRequest.port] - 1
+      else if @resources.browser.tcpLimit == 0 || @resources.browser.tcpLimit > @resources.h1_total_connections[httpRequest.host+httpRequest.port]
+        @resources.h1_total_connections[httpRequest.host+httpRequest.port] = @resources.h1_total_connections[httpRequest.host+httpRequest.port] + 1
+        @resources.browser.emit("newConnection", {}, httpRequest.host, httpRequest.port)
 
-      req = HTTPS.request httpRequest
+      if httpRequest.plain
+        if @resources.browser.tcpLimit > 0
+          if ! @resources.h1_agent
+            @resources.h1_agent = new HTTP.Agent({ 
+                maxSockets: @resources.browser.tcpLimit
+              })
+          httpRequest.agent = @resources.h1_agent
+
+        req = HTTP.request httpRequest
+      else
+        if @resources.browser.tcpLimit > 0
+          if ! @resources.h1s_agent
+            @resources.h1s_agent = new HTTPS.Agent({ 
+                maxSockets: @resources.browser.tcpLimit
+              })
+          httpRequest.agent = @resources.h1s_agent
+
+        req = HTTPS.request httpRequest
     else if protocol == 'spdy'
       cagent = null
       for agent in @resources.spdy_agents
@@ -678,6 +692,8 @@ Resources.makeHTTPRequest = (request, callback)->
 
     req.on("response", (response)=>
       #console.log 'BEGIN RESPONSE'
+      if protocol == 'http/1.1'
+        @resources.h1_avail_connections[httpRequest.host+httpRequest.port] = @resources.h1_avail_connections[httpRequest.host+httpRequest.port] + 1
       
       ccat = new Concat((bdy)=>
         #console.log 'RESPONSE '+Date.now()+' '+request.url+' '+bdy.length

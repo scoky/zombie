@@ -1,4 +1,4 @@
-HTTP = require("../../../node-http2")
+HTTP = require("./node-http2")
 
 
 class PortMap

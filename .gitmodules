@@ -1,0 +1,3 @@
+[submodule "src/zombie/node-http2"]
+	path = src/zombie/node-http2
+	url = https://github.com/scoky/node-http2.git

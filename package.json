@@ -72,6 +72,7 @@
     "traceur": "^0.0.74",
     "concat-stream": "*",
     "coffee-script": "*",
+    "minimist": "*",
     "spdy": "1.29.1"
   },
   "repository": {

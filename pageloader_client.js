@@ -25,7 +25,7 @@ var Browser = require("./src/zombie")
 var protocols = ['h2', 'http/1.1', 'spdy']
 var argv = require('minimist')(process.argv.slice(2))
 if (argv.h || argv._.length < 1) {
-  console.log('USAGE: node pageloader_client.js <url> [-t timeout] [-p proxy:port] [-r <'+protocols.toString()+'>] [-v] [-u user-agent] [-l tcp_limit] [-c] [-h]')
+  console.log('USAGE: node pageloader_client.js <url> [-t timeout] [-p proxy:port] [-r <'+protocols.toString()+'>] [-v] [-u user-agent] [-l tcp_limit] [-c] [-a har_file] [-h]')
   console.log('-p indicate a HTTP2 TLS proxy to use')
   console.log('-r indicate a protocol to use, (default '+protocols[0]+')')
   console.log('-t timeout in seconds')
@@ -33,6 +33,7 @@ if (argv.h || argv._.length < 1) {
   console.log('-u user-agent header')
   console.log('-l limit the number of tcp connections to a single domain')
   console.log('-c exclude content')
+  console.log('-a capture HAR and write to file')
   console.log('-h print this help menu')
   process.exit()
 }

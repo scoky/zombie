@@ -719,9 +719,12 @@ Resources.makeHTTPRequest = (request, callback)->
       ccat = new Concat((bdy)=>
         #console.log 'RESPONSE '+Date.now()+' '+request.url+' '+bdy.length
 
+        console.log JSON.stringify(response, null, '\t')
         response.body = bdy
         callStruct.response = response
 
+        entry.response = 
+          status:            response.status
         # Add to HAR
         @resources.browser.har.log.entries.push(entry)
 

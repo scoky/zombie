@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+git submodule init
+git submodule update
+(
+  cd src/zombie/node-http2
+  npm install
+)
+npm install

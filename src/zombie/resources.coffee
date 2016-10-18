@@ -723,7 +723,7 @@ Resources.makeHTTPRequest = (request, callback)->
         callStruct.response = response
 
         # Add to HAR
-        @resources.browser.har.entries.push(entry)
+        @resources.browser.har.log.entries.push(entry)
 
         callStruct.callbacks.forEach( (cbak)=>
           makeTheCall(cbak, response)

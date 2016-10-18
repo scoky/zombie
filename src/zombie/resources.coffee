@@ -722,6 +722,9 @@ Resources.makeHTTPRequest = (request, callback)->
         response.body = bdy
         callStruct.response = response
 
+        # Add to HAR
+        @resources.browser.har.entries.push(entry)
+
         callStruct.callbacks.forEach( (cbak)=>
           makeTheCall(cbak, response)
         )
@@ -741,8 +744,6 @@ Resources.makeHTTPRequest = (request, callback)->
       if protocol == 'h2'
         resp.headers = HTTP2.convertHeadersFromH2(response.headers)
 
-      # Add to HAR
-      @resources.browser.har.entries.push(entry)
       setImmediate(cbak, null, resp)
 
     # TODO: Handle push!

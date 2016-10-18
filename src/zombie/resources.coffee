@@ -218,7 +218,7 @@ class Resources extends Array
   # browser.
   addHandler: (handler)->
     assert handler.call, "Handler must be a function"
-    assert handler.length == 2 || handler.length == 3, "Handler function takes 2 (request handler) or 3 (reponse handler) arguments"
+    assert handler.length == 2 || handler.length == 3, "Handler function takes 2 (request handler) or 3 (response handler) arguments"
     @pipeline.push(handler)
 
   # Processes the request using the pipeline.
@@ -730,7 +730,7 @@ Resources.makeHTTPRequest = (request, callback)->
           statusText:        'Look at code'
           httpVersion:       response.httpVersion
           cookies:           [response.headers.cookie]
-          headers:           reponse.headers
+          headers:           response.headers
           content:           null
           redirectURL:       response.headers['location']
           headersSize:       -1

@@ -595,6 +595,27 @@ Resources.makeHTTPRequest = (request, callback)->
     #httpRequest.protocol =	 'https:'
     #console.log JSON.stringify(httpRequest, null, '\t')
 
+    entry =
+      startedDateTime:  (new Date()).toISOString()
+      time:             null
+      request:
+        method:           httpRequest.method
+        url:              httpRequest.url
+        httpVersion:      null
+        cookies:          [httpRequest.headers.cookie]
+        headers:          httpRequest.headers
+        queryString:      httpRequest.query
+        postData:         null
+        headersSize:      -1
+        bodySize:         0
+        comment:          ''
+      response:         null
+      cache:            null
+      timings:          null
+      serverIPAddress:  null
+      connection:       null
+      comment:          ''
+
     protocol = @resources.browser.getProtocol()
     # Convert headers for the special case of h2
     if protocol == 'h2'
@@ -720,6 +741,8 @@ Resources.makeHTTPRequest = (request, callback)->
       if protocol == 'h2'
         resp.headers = HTTP2.convertHeadersFromH2(response.headers)
 
+      # Add to HAR
+      @resources.browser.har.entries.push(entry)
       setImmediate(cbak, null, resp)
 
     # TODO: Handle push!

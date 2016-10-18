@@ -168,7 +168,13 @@ browser.visit(argv._[0], function () {
     setTimeout(function() {
       if (req_count == req_counter) {
         console.log(getTimeString()+' DONE')
-        process.exit(0)
+        if (argv.a) {
+          require('fs').writeFile(argv.a, JSON.stringify(browser.har, null, '\t'), function() {
+            process.exit(0)
+          })
+        } else {
+          process.exit(0)
+        }
       } else {
         waitForDone()
       }

@@ -41,7 +41,7 @@ debug = Debug("zombie")
 # Browser options you can set when creating new browser, or on browser instance.
 BROWSER_OPTIONS   = ["features", "headers", "htmlParser", "waitDuration",
                      "proxy", "referer", "silent", "site", "strictSSL", "userAgent",
-                     "maxRedirects", "language", "runScripts", "localAddress", "tcpLimit"]
+                     "maxRedirects", "language", "runScripts", "localAddress", "tcpLimit", "har"]
 
 # Supported browser features.
 BROWSER_FEATURES  = ["scripts", "css", "img", "iframe"]
@@ -1253,6 +1253,14 @@ Browser.default =
   runScripts: true
   
   tcpLimit: 0
+  har: 
+    'log':
+        'version': '1.2'
+        'creator':
+            'name': 'ZombieJS HAR Capturer'
+            'version': '0.9'
+        'pages': []
+        'entries': []
 
 
 

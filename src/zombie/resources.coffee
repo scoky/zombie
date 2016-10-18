@@ -470,7 +470,7 @@ Resources.decompressBody = (request, response, next)->
   if response.body && response.headers
     transferEncoding = response.headers["transfer-encoding"]
     contentEncoding = response.headers["content-encoding"]
-    response.headers["transfer-encoding"] = response.headers["content-encoding"] = 'none'
+    response.headers["transfer-encoding"] = response.headers["content-encoding"] = undefined
   if ( (contentEncoding == "deflate") || (transferEncoding == "deflate") )
     Zlib.inflate response.body, (error, buffer)->
       unless error

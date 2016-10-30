@@ -617,9 +617,6 @@ Resources.makeHTTPRequest = (request, callback)->
       comment:          ''
 
     protocol = @resources.browser.getProtocol()
-    # Convert headers for the special case of h2
-    if protocol == 'h2'
-        httpRequest.headers = HTTP2.convertHeadersToH2(request.headers)
 
     prxy = @resources.browser.getProxy()
     if prxy
@@ -645,12 +642,13 @@ Resources.makeHTTPRequest = (request, callback)->
       return
 
     #console.log 'REQUEST '+Date.now()+' '+request.url
-    if protocol == 'h2'
+    if protocol == 'h2' and ! httpRequest.plain
+      httpRequest.headers = HTTP2.convertHeadersToH2(request.headers)
       if httpRequest.plain
         req = HTTP2.raw.request httpRequest
       else
         req = HTTP2.request httpRequest
-    else if protocol == 'http/1.1'
+    else if protocol == 'http/1.1' or httpRequest.plain
 
       if ! @resources.h1_total_connections[httpRequest.host+httpRequest.port]
         @resources.h1_avail_connections[httpRequest.host+httpRequest.port] = 0

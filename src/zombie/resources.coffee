@@ -22,10 +22,11 @@ HTML        = require("jsdom").defaultLevel
 Path        = require("path")
 QS          = require("querystring")
 HTTP        = require('http')
-HTTPS        = require('https')
+HTTPS       = require('https')
 HTTP2       = require('./node-http2')
 SPDY        = require('spdy')
 URL         = require("url")
+HTTPStatus  = require('http-status');
 Zlib        = require("zlib")
 assert      = require("assert")
 Concat	    = require("concat-stream")
@@ -49,6 +50,7 @@ class Resources extends Array
     @h1_total_connections = {}
     @h1_agent = undefined
     @h1s_agent = undefined
+    @connIndex = 0
 
 
   # Make an HTTP request (also supports file: protocol).
@@ -540,6 +542,12 @@ Resources.pipeline = [
 
 # -- Make HTTP request
 
+Resources.headersSize = (headers)->
+  str = ''
+  for key, value in headers
+    str += key + ': ' + value + '\n\r'
+  str += '\n\r'
+  return Buffer.bytelength(str, 'utf8')
 
 # Used to perform HTTP request (also supports file: resources).  This is always
 # the last request handler.
@@ -596,7 +604,7 @@ Resources.makeHTTPRequest = (request, callback)->
     #console.log JSON.stringify(httpRequest, null, '\t')
 
     entry =
-      startedDateTime:  (new Date()).toISOString()
+      startedDateTime:  new Date()
       time:             null
       request:
         method:           httpRequest.method
@@ -605,16 +613,19 @@ Resources.makeHTTPRequest = (request, callback)->
         cookies:          [httpRequest.headers.cookie]
         headers:          httpRequest.headers
         queryString:      httpRequest.query
-        postData:         null
-        headersSize:      -1
+        headersSize:      headersSize(httpRequest.headers)
         bodySize:         0
-        comment:          ''
       response:         null
-      cache:            null
-      timings:          null
+      timings:          
+        blocked:          -1
+        dns:              -1
+        connect:          -1
+        send:             -1
+        wait:             -1
+        receive:          -1
+        ssl:              -1
       serverIPAddress:  null
-      connection:       null
-      comment:          ''
+      connection:       @resources.connIndex
 
     protocol = @resources.browser.getProtocol()
 
@@ -698,6 +709,8 @@ Resources.makeHTTPRequest = (request, callback)->
            })
 
         # Report the new connection
+        @resources.connIndex += 1
+        entry.connection = @resources.connIndex
         @resources.browser.emit("newConnection", {}, httpRequest.host, httpRequest.port)
         @resources.spdy_agents.push(cagent)
 
@@ -723,17 +736,18 @@ Resources.makeHTTPRequest = (request, callback)->
         callStruct.response = response
 
         entry.request.httpVersion = response.httpVersion
+        entry.time = new Date() - entry.startedDateTime
+        entry.startedDateTime = entry.startedDateTime.toISOString()
         entry.response = 
           status:            response.statusCode
-          statusText:        'Look at code'
+          statusText:        HTTPStatus[response.statusCode]
           httpVersion:       response.httpVersion
           cookies:           [response.headers.cookie]
           headers:           response.headers
           content:           null
           redirectURL:       response.headers['location']
-          headersSize:       -1
+          headersSize:       headersSize(response.headers)
           bodySize:          bdy.length
-          comment:           ''
         # Add to HAR
         @resources.browser.har.log.entries.push(entry)
 
@@ -763,6 +777,8 @@ Resources.makeHTTPRequest = (request, callback)->
       @resources.browser.emit("push", push)
 
     req.on "newConnection", (endpoint)=>
+      @resources.connIndex += 1
+      entry.connection = @resources.connIndex
       @resources.browser.emit("newConnection", endpoint, httpRequest.host, httpRequest.port)
 
     req.on "protocolNegotiated", (protocol)=>

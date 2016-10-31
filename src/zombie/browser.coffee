@@ -1259,8 +1259,13 @@ Browser.default =
         'creator':
             'name': 'ZombieJS HAR Capturer'
             'version': '0.9'
-        'pages': []
+            'comment': 'https://github.com/scoky/zombie'
+        'browser':
+            'name': 'ZombieJS'
+            'version': '0.9BETA'
+            'comment': 'https://github.com/scoky/zombie'
         'entries': []
+        'comment': ''
 
 
 

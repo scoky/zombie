@@ -51,7 +51,12 @@ class Resources extends Array
     @h1_agent = undefined
     @h1s_agent = undefined
     @connIndex = 0
-
+    @headersSize = (headers)->
+      str = ''
+      for key, value of headers
+        str += key + ': ' + value + '\n\r'
+      str += '\n\r'
+      return Buffer.byteLength(str, 'utf8')
 
   # Make an HTTP request (also supports file: protocol).
   #
@@ -542,13 +547,6 @@ Resources.pipeline = [
 
 # -- Make HTTP request
 
-Resources.headersSize = (headers)->
-  str = ''
-  for key, value in headers
-    str += key + ': ' + value + '\n\r'
-  str += '\n\r'
-  return Buffer.bytelength(str, 'utf8')
-
 # Used to perform HTTP request (also supports file: resources).  This is always
 # the last request handler.
 Resources.makeHTTPRequest = (request, callback)->
@@ -613,7 +611,7 @@ Resources.makeHTTPRequest = (request, callback)->
         cookies:          [httpRequest.headers.cookie]
         headers:          httpRequest.headers
         queryString:      httpRequest.query
-        headersSize:      headersSize(httpRequest.headers)
+        headersSize:      @resources.headersSize(httpRequest.headers)
         bodySize:         0
       response:         null
       timings:          
@@ -628,6 +626,9 @@ Resources.makeHTTPRequest = (request, callback)->
       connection:       @resources.connIndex
 
     protocol = @resources.browser.getProtocol()
+    # http is always http/1.1
+    if httpRequest.plain
+      protocol = 'http/1.1'
 
     prxy = @resources.browser.getProxy()
     if prxy
@@ -653,13 +654,13 @@ Resources.makeHTTPRequest = (request, callback)->
       return
 
     #console.log 'REQUEST '+Date.now()+' '+request.url
-    if protocol == 'h2' and ! httpRequest.plain
+    if protocol == 'h2'
       httpRequest.headers = HTTP2.convertHeadersToH2(request.headers)
       if httpRequest.plain
         req = HTTP2.raw.request httpRequest
       else
         req = HTTP2.request httpRequest
-    else if protocol == 'http/1.1' or httpRequest.plain
+    else if protocol == 'http/1.1'
 
       if ! @resources.h1_total_connections[httpRequest.host+httpRequest.port]
         @resources.h1_avail_connections[httpRequest.host+httpRequest.port] = 0
@@ -746,7 +747,7 @@ Resources.makeHTTPRequest = (request, callback)->
           headers:           response.headers
           content:           null
           redirectURL:       response.headers['location']
-          headersSize:       headersSize(response.headers)
+          headersSize:       @resources.headersSize(response.headers)
           bodySize:          bdy.length
         # Add to HAR
         @resources.browser.har.log.entries.push(entry)

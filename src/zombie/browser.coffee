@@ -1264,6 +1264,13 @@ Browser.default =
             'name': 'ZombieJS'
             'version': '0.9BETA'
             'comment': 'https://github.com/scoky/zombie'
+        'pages': [{
+            'startedDateTime': new Date()
+            'id': null
+            'pageTimings': 
+                'onContentLoad':  null
+                'onLoad': null
+          }]
         'entries': []
 
 

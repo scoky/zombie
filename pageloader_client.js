@@ -6,17 +6,17 @@ http2.globalAgent = new http2.Agent({
 });
 
 var req_counter = 0
-process.on('uncaughtException', function(err) {
-  console.log('ERROR='+err);
-  // Typically, this is a protocol error
-  var req_count = req_counter
-  setTimeout(function() {
-    if (req_count == req_counter) {
-      console.log(getTimeString()+' TIMEOUT')
-      process.exit(0)
-    }
-  }, 5000)
-});
+// process.on('uncaughtException', function(err) {
+//   console.log('ERROR='+err);
+//   // Typically, this is a protocol error
+//   var req_count = req_counter
+//   setTimeout(function() {
+//     if (req_count == req_counter) {
+//       console.log(getTimeString()+' TIMEOUT')
+//       process.exit(0)
+//     }
+//   }, 5000)
+// });
 
 var CS = require('coffee-script')
 CS.register()
@@ -180,6 +180,10 @@ browser.visit(argv._[0], function () {
       }
     }, 5000)
   }
+  browser.har.log.pages[0].id = argv._[0]
+  browser.har.log.pages[0].pageTimings.onContentLoad = new Date() - browser.har.log.pages[0].startedDateTime
+  browser.har.log.pages[0].pageTimings.onLoad = new Date() - browser.har.log.pages[0].startedDateTime
+  browser.har.log.pages[0].startedDateTime = browser.har.log.pages[0].startedDateTime.toISOString()
   waitForDone()
   console.log(getTimeString()+' VISITED')
 });

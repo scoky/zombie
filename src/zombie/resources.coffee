@@ -599,7 +599,7 @@ Resources.makeHTTPRequest = (request, callback)->
       port = 443
     httpRequest.port =           httpRequest.port || port
     #httpRequest.protocol =	 'https:'
-    #console.log JSON.stringify(httpRequest, null, '\t')
+    console.log JSON.stringify(httpRequest, null, '\t')
 
     entry =
       startedDateTime:  new Date()
@@ -614,16 +614,17 @@ Resources.makeHTTPRequest = (request, callback)->
         headersSize:      @resources.headersSize(httpRequest.headers)
         bodySize:         0
       response:         null
-      timings:          
-        blocked:          -1
-        dns:              -1
-        connect:          -1
-        send:             -1
-        wait:             -1
-        receive:          -1
-        ssl:              -1
-      serverIPAddress:  null
-      connection:       @resources.connIndex
+      #serverIPAddress:  null
+      #connection:       @resources.connIndex
+
+      # timings:          
+      #   blocked:          -1
+      #   dns:              -1
+      #   connect:          -1
+      #   send:             -1
+      #   wait:             -1
+      #   receive:          -1
+      #   ssl:              -1
 
     protocol = @resources.browser.getProtocol()
     # http is always http/1.1
@@ -745,10 +746,10 @@ Resources.makeHTTPRequest = (request, callback)->
           httpVersion:       response.httpVersion
           cookies:           [response.headers.cookie]
           headers:           response.headers
-          content:           null
           redirectURL:       response.headers['location']
           headersSize:       @resources.headersSize(response.headers)
           bodySize:          bdy.length
+          #content:           null
         # Add to HAR
         @resources.browser.har.log.entries.push(entry)
 

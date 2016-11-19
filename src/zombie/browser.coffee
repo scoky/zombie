@@ -1265,7 +1265,6 @@ Browser.default =
             'version': '0.9BETA'
             'comment': 'https://github.com/scoky/zombie'
         'entries': []
-        'comment': ''
 
 
 

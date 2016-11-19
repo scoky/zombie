@@ -599,7 +599,7 @@ Resources.makeHTTPRequest = (request, callback)->
       port = 443
     httpRequest.port =           httpRequest.port || port
     #httpRequest.protocol =	 'https:'
-    console.log JSON.stringify(httpRequest, null, '\t')
+    #console.log JSON.stringify(httpRequest, null, '\t')
 
     entry =
       startedDateTime:  new Date()
